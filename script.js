@@ -1,4 +1,4 @@
-// Duomenų objektas
+// duomenu objektas
 const userData = {
   lytis: "",
   vardas: "",
@@ -27,13 +27,13 @@ const userData = {
   darboSritis: ""
 };
 
-// DOM elementai
+// dom elementai
 const form = document.getElementById('anketaForm');
 const progressFill = document.getElementById('progressFill');
 const progressText = document.getElementById('progressText');
 
-// Asmens kodo generavimas
-function generuotiAsmensKoda(gimimoData, lytis) {
+// asmens kodo generavimas (tik pirmieji 7 simboliai)
+function generuotiDalinaAsmensKoda(gimimoData, lytis) {
     if (!gimimoData || !lytis) return '';
     
     const data = new Date(gimimoData);
@@ -41,7 +41,7 @@ function generuotiAsmensKoda(gimimoData, lytis) {
     const menuo = String(data.getMonth() + 1).padStart(2, '0');
     const diena = String(data.getDate()).padStart(2, '0');
     
-    // Pirmas skaitmuo pagal amžių ir lytį
+    // pirmas skaitmuo pagal amziu ir lyti
     let pirmasSkaitmuo;
     if (metai >= 1800 && metai <= 1899) {
         pirmasSkaitmuo = lytis === 'vyras' ? '1' : '2';
@@ -51,19 +51,11 @@ function generuotiAsmensKoda(gimimoData, lytis) {
         pirmasSkaitmuo = lytis === 'vyras' ? '5' : '6';
     }
     
-    // Metų paskutiniai 2 skaitmenys
+    // metu paskutiniai 2 skaitmenys
     const metuPabaiga = String(metai).slice(-2);
     
-    // Atsitiktiniai 3 skaitmenys
-    const atsitiktiniai = String(Math.floor(Math.random() * 900) + 100);
-    
-    // Formuojame kodą be kontrolinio skaitmens
-    const dalinisKodas = pirmasSkaitmuo + metuPabaiga + menuo + diena + atsitiktiniai;
-    
-    // Skaičiuojame kontrolinį skaitmenį
-    const kontrolinisSkaitmuo = skaiciuotiKontroliniSkaitmeni(dalinisKodas);
-    
-    return dalinisKodas + kontrolinisSkaitmuo;
+    // graziname tik pirmuosius 7 simbolius (lytis + yymmdd)
+    return pirmasSkaitmuo + metuPabaiga + menuo + diena;
 }
 
 function skaiciuotiKontroliniSkaitmeni(kodas) {
@@ -90,7 +82,7 @@ function skaiciuotiKontroliniSkaitmeni(kodas) {
     return liekana < 10 ? liekana : 0;
 }
 
-// Amžiaus skaičiavimas
+// amziaus skaiciavimas
 function skaiciuotiAmziu(gimimoData) {
     if (!gimimoData) return 0;
     const siandien = new Date();
@@ -103,7 +95,7 @@ function skaiciuotiAmziu(gimimoData) {
     return amzius;
 }
 
-// Progreso atnaujinimas
+// progreso atnaujinimas
 function atnaujintiProgresa() {
     const visiLaukai = form.querySelectorAll('input:not([readonly]), select, textarea');
     const matomiLaukai = Array.from(visiLaukai).filter(laukas => {
@@ -123,14 +115,18 @@ function atnaujintiProgresa() {
     progressText.textContent = `Užpildyta: ${procentai}%`;
 }
 
-// Lytis ir gimimo data - asmens kodo generavimas
+// lytis ir gimimo data - asmens kodo generavimas
 document.getElementById('lytis').addEventListener('change', function() {
     userData.lytis = this.value;
     const gimimoData = document.getElementById('gimimoData').value;
+    const asmensKodasInput = document.getElementById('asmensKodas');
     if (gimimoData) {
-        const asmensKodas = generuotiAsmensKoda(gimimoData, this.value);
-        document.getElementById('asmensKodas').value = asmensKodas;
-        userData.asmensKodas = asmensKodas;
+        const dalinisKodas = generuotiDalinaAsmensKoda(gimimoData, this.value);
+        // issaugome esamus paskutinius 4 simbolius, jei yra
+        const esami = asmensKodasInput.value;
+        const paskutiniai = esami.length > 7 ? esami.substring(7) : '';
+        asmensKodasInput.value = dalinisKodas + paskutiniai;
+        userData.asmensKodas = asmensKodasInput.value;
     }
     atnaujintiProgresa();
 });
@@ -138,13 +134,17 @@ document.getElementById('lytis').addEventListener('change', function() {
 document.getElementById('gimimoData').addEventListener('change', function() {
     userData.gimimoData = this.value;
     const lytis = document.getElementById('lytis').value;
+    const asmensKodasInput = document.getElementById('asmensKodas');
     if (lytis) {
-        const asmensKodas = generuotiAsmensKoda(this.value, lytis);
-        document.getElementById('asmensKodas').value = asmensKodas;
-        userData.asmensKodas = asmensKodas;
+        const dalinisKodas = generuotiDalinaAsmensKoda(this.value, lytis);
+        // Išsaugome esamus paskutinius 4 simbolius, jei yra
+        const esami = asmensKodasInput.value;
+        const paskutiniai = esami.length > 7 ? esami.substring(7) : '';
+        asmensKodasInput.value = dalinisKodas + paskutiniai;
+        userData.asmensKodas = asmensKodasInput.value;
     }
     
-    // Vedybinės padėties logika pagal amžių
+    // vedybines padeties logika pagal amziu
     const amzius = skaiciuotiAmziu(this.value);
     const vedybinesPadetisSelect = document.getElementById('vedybinePadetis');
     
@@ -159,23 +159,55 @@ document.getElementById('gimimoData').addEventListener('change', function() {
     atnaujintiProgresa();
 });
 
-// Pagrindiai laukai
+// pagrindiai laukai
 document.getElementById('vardas').addEventListener('input', function() {
+    // leidziame tik raides, tarpus, bruksnelius ir lietuviska raides
+    this.value = this.value.replace(/[0-9]/g, '');
     userData.vardas = this.value;
     atnaujintiProgresa();
 });
 
 document.getElementById('antrasVardas').addEventListener('input', function() {
+    // leidziame tik raides, tarpus, bruksnelius
+    this.value = this.value.replace(/[0-9]/g, '');
     userData.antrasVardas = this.value;
     atnaujintiProgresa();
 });
 
 document.getElementById('pavarde').addEventListener('input', function() {
+    // leidziame tik raides, tarpus, bruksnelius
+    this.value = this.value.replace(/[0-9]/g, '');
     userData.pavarde = this.value;
     atnaujintiProgresa();
 });
 
-// Išsilavinimas
+// asmens kodo rankinis ivedimas (leidziama redaguoti tik paskutinius 4 simbolius)
+document.getElementById('asmensKodas').addEventListener('input', function() {
+    const gimimoData = document.getElementById('gimimoData').value;
+    const lytis = document.getElementById('lytis').value;
+    
+    if (gimimoData && lytis) {
+        const dalinisKodas = generuotiDalinaAsmensKoda(gimimoData, lytis);
+        let ivestas = this.value.replace(/\\D/g, ''); // tik skaitmenyss
+        
+        // jei vartotojas bando redaguoti pirmuosius 7, atkuriame juos
+        if (ivestas.length >= 7 && !ivestas.startsWith(dalinisKodas)) {
+            ivestas = dalinisKodas + ivestas.substring(7);
+        }
+        
+        // ribojame iki 11 simboliu
+        if (ivestas.length > 11) {
+            ivestas = ivestas.substring(0, 11);
+        }
+        
+        this.value = ivestas;
+    }
+    
+    userData.asmensKodas = this.value;
+    atnaujintiProgresa();
+});
+
+// issilavinimas
 document.getElementById('isilavinimas').addEventListener('change', function() {
     userData.isilavinimas.tipas = this.value;
     const detales = document.getElementById('issilavinimoDetales');
@@ -184,7 +216,7 @@ document.getElementById('isilavinimas').addEventListener('change', function() {
     
     if (this.value === '' || this.value === 'pagrindinis' || this.value === 'vidurinis') {
         detales.style.display = 'none';
-        // Išvalome nereikalingus laukus
+        // isvalome nereikalingus laukus
         document.getElementById('istaiga').value = '';
         document.getElementById('baigimoMetai').value = '';
         document.getElementById('kvalifikacija').value = '';
@@ -200,7 +232,7 @@ document.getElementById('isilavinimas').addEventListener('change', function() {
             kvalifikacijaGroup.style.display = 'block';
             laipsnisGroup.style.display = 'block';
             
-            // Nustatome galimus laipsnius
+            // nustatome galimus laipsnius
             const laipsnisSelect = document.getElementById('laipsnis');
             laipsnisSelect.innerHTML = '<option value="">Pasirinkite...</option>';
             
@@ -217,16 +249,20 @@ document.getElementById('isilavinimas').addEventListener('change', function() {
 });
 
 document.getElementById('istaiga').addEventListener('input', function() {
+    // leidziame raides, tarpus, skacius (istaigose gali buti numeriai pvz. "gimnazija nr. 5")
     userData.isilavinimas.istaiga = this.value;
     atnaujintiProgresa();
 });
 
 document.getElementById('baigimoMetai').addEventListener('input', function() {
+    // leidziame tik skaitmenis
+    this.value = this.value.replace(/\\D/g, '');
     userData.isilavinimas.metai = this.value;
     atnaujintiProgresa();
 });
 
 document.getElementById('kvalifikacija').addEventListener('input', function() {
+    // kvalifikacijoje gali buti ir raidziu, ir skaciu
     userData.isilavinimas.kvalifikacija = this.value;
     atnaujintiProgresa();
 });
@@ -236,9 +272,12 @@ document.getElementById('laipsnis').addEventListener('change', function() {
     atnaujintiProgresa();
 });
 
-// Kontaktai
+// kontaktai
 document.getElementById('telefonas').addEventListener('input', function() {
-    // Automatiškai pridedame +370 jei pradeda rašyti 6
+    // leidziame tik skaitmenis, +, tarpus ir bruksnelius
+    this.value = this.value.replace(/[^0-9+\\s\\-]/g, ''););
+    
+    // automatiskai pridedame +370 jei pradeda rasyti 6
     if (this.value.length === 1 && this.value === '6') {
         this.value = '+370' + this.value;
     }
@@ -256,7 +295,7 @@ document.getElementById('adresas').addEventListener('input', function() {
     atnaujintiProgresa();
 });
 
-// Vedybinė padėtis
+// vedybine padetis
 document.getElementById('vedybinePadetis').addEventListener('change', function() {
     userData.vedybinePadetis = this.value;
     const sutuoktinioDetales = document.getElementById('sutuoktinioDetales');
@@ -274,29 +313,33 @@ document.getElementById('vedybinePadetis').addEventListener('change', function()
 });
 
 document.getElementById('sutuoktinioVardas').addEventListener('input', function() {
+    // leidziame tik raides
+    this.value = this.value.replace(/[0-9]/g, '');
     userData.sutuoktinis.vardas = this.value;
     atnaujintiProgresa();
 });
 
 document.getElementById('sutuoktinioPavarde').addEventListener('input', function() {
+    // leidziame tik raides
+    this.value = this.value.replace(/[0-9]/g, '');
     userData.sutuoktinis.pavarde = this.value;
     atnaujintiProgresa();
 });
 
-// Profesinė padėtis
+// profesine padetis
 document.getElementById('profesinePadetis').addEventListener('change', function() {
     userData.profesinePadetis = this.value;
     
-    // Paslėpti visus papildomus laukus
+    // paslepti visus papildomus laukus
     document.getElementById('studijuDetales').style.display = 'none';
     document.getElementById('dirbaDetales').style.display = 'none';
     document.getElementById('nedirbaDetales').style.display = 'none';
     document.getElementById('atostoguDetales').style.display = 'none';
     
-    // Išvalyti detales
+    // isvalyti detales
     userData.profesineDetale = {};
     
-    // Rodyti atitinkamus laukus
+    // rodyti atitinkamus laukus
     if (this.value === 'studijuoja') {
         document.getElementById('studijuDetales').style.display = 'block';
     } else if (this.value === 'dirba') {
@@ -310,13 +353,15 @@ document.getElementById('profesinePadetis').addEventListener('change', function(
     atnaujintiProgresa();
 });
 
-// Studijų detalės
+// studiju detales
 document.getElementById('studijuPakopa')?.addEventListener('change', function() {
     userData.profesineDetale.studijuPakopa = this.value;
     atnaujintiProgresa();
 });
 
 document.getElementById('kursas')?.addEventListener('input', function() {
+    // leidziame tik skaitmenis
+    this.value = this.value.replace(/\\D/g, '');
     userData.profesineDetale.kursas = this.value;
     atnaujintiProgresa();
 });
@@ -327,11 +372,13 @@ document.getElementById('studijuIstaiga')?.addEventListener('input', function() 
 });
 
 document.getElementById('tiketiniBaigimoMetai')?.addEventListener('input', function() {
+    // leidziame tik skaitmenis
+    this.value = this.value.replace(/\\D/g, '');
     userData.profesineDetale.tiketiniBaigimoMetai = this.value;
     atnaujintiProgresa();
 });
 
-// Darbo detalės
+// darbo detales
 document.getElementById('darboIstaiga')?.addEventListener('input', function() {
     userData.profesineDetale.darboIstaiga = this.value;
     atnaujintiProgresa();
@@ -342,20 +389,22 @@ document.getElementById('pareigos')?.addEventListener('input', function() {
     atnaujintiProgresa();
 });
 
-// Nedarbo detalės
+// nedarbo detales
 document.getElementById('nedarboPriezastis')?.addEventListener('input', function() {
     userData.profesineDetale.nedarboPriezastis = this.value;
     atnaujintiProgresa();
 });
 
-// Atostogų detalės
+// atostogu detales
 document.getElementById('atostoguPabaiga')?.addEventListener('input', function() {
     userData.profesineDetale.atostoguPabaiga = this.value;
     atnaujintiProgresa();
 });
 
-// Darbo patirtis ir sritis
+// darbo patirtis ir sritis
 document.getElementById('darboPatirtis').addEventListener('input', function() {
+    // leidziame tik skaitmenis (metai)
+    this.value = this.value.replace(/\\D/g, '');
     userData.darboPatirtis = this.value;
     atnaujintiProgresa();
 });
@@ -365,19 +414,19 @@ document.getElementById('darboSritis').addEventListener('change', function() {
     atnaujintiProgresa();
 });
 
-// Formos pateikimas
+// formos pateikimas
 form.addEventListener('submit', function(e) {
     e.preventDefault();
     
-    // Rodome rezultatą
+    // rodome rezultata
     document.getElementById('rezultatas').style.display = 'block';
     document.getElementById('rezultatoTekstas').textContent = JSON.stringify(userData, null, 2);
     
-    // Smooth scroll į rezultatą
+    // smooth scroll i rezultata
     document.getElementById('rezultatas').scrollIntoView({ behavior: 'smooth' });
     
     console.log('Surinkti duomenys:', userData);
 });
 
-// Pradinė būsena
+// pradine busena
 atnaujintiProgresa();
