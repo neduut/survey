@@ -147,12 +147,23 @@ document.getElementById('gimimoData').addEventListener('change', function() {
     // vedybines padeties logika pagal amziu
     const amzius = skaiciuotiAmziu(this.value);
     const vedybinesPadetisSelect = document.getElementById('vedybinePadetis');
+    const ribinisAtvejisGroup = document.getElementById('ribinisAtvejisGroup');
+    const ribinisAtvejisCheckbox = document.getElementById('ribinisAtvejis');
     
     if (amzius < 16) {
         vedybinesPadetisSelect.value = 'nevedesTekejusi';
         vedybinesPadetisSelect.disabled = true;
+        ribinisAtvejisGroup.style.display = 'none';
+        ribinisAtvejisCheckbox.checked = false;
+        document.getElementById('sutuoktinioDetales').style.display = 'none';
+    } else if (amzius >= 16 && amzius < 18) {
+        ribinisAtvejisGroup.style.display = 'block';
+        vedybinesPadetisSelect.value = 'nevedesTekejusi';
+        vedybinesPadetisSelect.disabled = true;
         document.getElementById('sutuoktinioDetales').style.display = 'none';
     } else {
+        ribinisAtvejisGroup.style.display = 'none';
+        ribinisAtvejisCheckbox.checked = false;
         vedybinesPadetisSelect.disabled = false;
     }
     
@@ -188,7 +199,7 @@ document.getElementById('asmensKodas').addEventListener('input', function() {
     
     if (gimimoData && lytis) {
         const dalinisKodas = generuotiDalinaAsmensKoda(gimimoData, lytis);
-        let ivestas = this.value.replace(/\\D/g, ''); // tik skaitmenyss
+        let ivestas = this.value.replace(/\D/g, ''); // tik skaitmenys
         
         // jei vartotojas bando redaguoti pirmuosius 7, atkuriame juos
         if (ivestas.length >= 7 && !ivestas.startsWith(dalinisKodas)) {
@@ -214,11 +225,18 @@ document.getElementById('isilavinimas').addEventListener('change', function() {
     const kvalifikacijaGroup = document.getElementById('kvalifikacijaGroup');
     const laipsnisGroup = document.getElementById('laipsnisGroup');
     
-    if (this.value === '' || this.value === 'pagrindinis' || this.value === 'vidurinis') {
+    if (this.value === '') {
         detales.style.display = 'none';
         // isvalome nereikalingus laukus
         document.getElementById('istaiga').value = '';
         document.getElementById('baigimoMetai').value = '';
+        document.getElementById('kvalifikacija').value = '';
+        document.getElementById('laipsnis').value = '';
+    } else if (this.value === 'pagrindinis' || this.value === 'vidurinis') {
+        detales.style.display = 'block';
+        // rodome tik istaiga ir metus, be kvalifikacijos ir laipsnio
+        kvalifikacijaGroup.style.display = 'none';
+        laipsnisGroup.style.display = 'none';
         document.getElementById('kvalifikacija').value = '';
         document.getElementById('laipsnis').value = '';
     } else {
@@ -256,7 +274,14 @@ document.getElementById('istaiga').addEventListener('input', function() {
 
 document.getElementById('baigimoMetai').addEventListener('input', function() {
     // leidziame tik skaitmenis
-    this.value = this.value.replace(/\\D/g, '');
+    this.value = this.value.replace(/\D/g, '');
+    
+    // ribojame maksimalius metus iki dabartiniu (2025)
+    const currentYear = 2025;
+    if (parseInt(this.value) > currentYear) {
+        this.value = currentYear.toString();
+    }
+    
     userData.isilavinimas.metai = this.value;
     atnaujintiProgresa();
 });
@@ -272,10 +297,25 @@ document.getElementById('laipsnis').addEventListener('change', function() {
     atnaujintiProgresa();
 });
 
+// ribinis atvejis checkbox (16-17 metu santuoka)
+document.getElementById('ribinisAtvejis').addEventListener('change', function() {
+    const vedybinesPadetisSelect = document.getElementById('vedybinePadetis');
+    
+    if (this.checked) {
+        vedybinesPadetisSelect.disabled = false;
+    } else {
+        vedybinesPadetisSelect.value = 'nevedesTekejusi';
+        vedybinesPadetisSelect.disabled = true;
+        document.getElementById('sutuoktinioDetales').style.display = 'none';
+    }
+    
+    atnaujintiProgresa();
+});
+
 // kontaktai
 document.getElementById('telefonas').addEventListener('input', function() {
     // leidziame tik skaitmenis, +, tarpus ir bruksnelius
-    this.value = this.value.replace(/[^0-9+\\s\\-]/g, ''););
+    this.value = this.value.replace(/[^0-9+\s\-]/g, '');
     
     // automatiskai pridedame +370 jei pradeda rasyti 6
     if (this.value.length === 1 && this.value === '6') {
@@ -353,15 +393,14 @@ document.getElementById('profesinePadetis').addEventListener('change', function(
     atnaujintiProgresa();
 });
 
-// studiju detales
 document.getElementById('studijuPakopa')?.addEventListener('change', function() {
     userData.profesineDetale.studijuPakopa = this.value;
     atnaujintiProgresa();
 });
 
 document.getElementById('kursas')?.addEventListener('input', function() {
-    // leidziame tik skaitmenis
-    this.value = this.value.replace(/\\D/g, '');
+    // leisti tik skaitmenis
+    this.value = this.value.replace(/\D/g, '');
     userData.profesineDetale.kursas = this.value;
     atnaujintiProgresa();
 });
@@ -372,8 +411,8 @@ document.getElementById('studijuIstaiga')?.addEventListener('input', function() 
 });
 
 document.getElementById('tiketiniBaigimoMetai')?.addEventListener('input', function() {
-    // leidziame tik skaitmenis
-    this.value = this.value.replace(/\\D/g, '');
+    // leisti tik skaitmenis
+    this.value = this.value.replace(/\D/g, '');
     userData.profesineDetale.tiketiniBaigimoMetai = this.value;
     atnaujintiProgresa();
 });
@@ -404,7 +443,7 @@ document.getElementById('atostoguPabaiga')?.addEventListener('input', function()
 // darbo patirtis ir sritis
 document.getElementById('darboPatirtis').addEventListener('input', function() {
     // leidziame tik skaitmenis (metai)
-    this.value = this.value.replace(/\\D/g, '');
+    this.value = this.value.replace(/\D/g, '');
     userData.darboPatirtis = this.value;
     atnaujintiProgresa();
 });
