@@ -174,6 +174,10 @@ document.getElementById('gimimoData').addEventListener('change', function() {
 document.getElementById('vardas').addEventListener('input', function() {
     // leidziame tik raides, tarpus, bruksnelius ir lietuviska raides
     this.value = this.value.replace(/[0-9]/g, '');
+    // pirma raide didziosios
+    if (this.value.length > 0) {
+        this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
+    }
     userData.vardas = this.value;
     atnaujintiProgresa();
 });
@@ -181,6 +185,10 @@ document.getElementById('vardas').addEventListener('input', function() {
 document.getElementById('antrasVardas').addEventListener('input', function() {
     // leidziame tik raides, tarpus, bruksnelius
     this.value = this.value.replace(/[0-9]/g, '');
+    // pirma raide didziosios
+    if (this.value.length > 0) {
+        this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
+    }
     userData.antrasVardas = this.value;
     atnaujintiProgresa();
 });
@@ -188,6 +196,10 @@ document.getElementById('antrasVardas').addEventListener('input', function() {
 document.getElementById('pavarde').addEventListener('input', function() {
     // leidziame tik raides, tarpus, bruksnelius
     this.value = this.value.replace(/[0-9]/g, '');
+    // pirma raide didziosios
+    if (this.value.length > 0) {
+        this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
+    }
     userData.pavarde = this.value;
     atnaujintiProgresa();
 });
@@ -201,7 +213,7 @@ document.getElementById('asmensKodas').addEventListener('input', function() {
         const dalinisKodas = generuotiDalinaAsmensKoda(gimimoData, lytis);
         let ivestas = this.value.replace(/\D/g, ''); // tik skaitmenys
         
-        // jei vartotojas bando redaguoti pirmuosius 7, atkuriame juos
+        // jei vartotojas bando redaguoti pirmuosius 7, atkuria juos
         if (ivestas.length >= 7 && !ivestas.startsWith(dalinisKodas)) {
             ivestas = dalinisKodas + ivestas.substring(7);
         }
@@ -276,10 +288,18 @@ document.getElementById('baigimoMetai').addEventListener('input', function() {
     // leidziame tik skaitmenis
     this.value = this.value.replace(/\D/g, '');
     
-    // ribojame maksimalius metus iki dabartiniu (2025)
-    const currentYear = 2025;
-    if (parseInt(this.value) > currentYear) {
-        this.value = currentYear.toString();
+    // ribojame iki 4 skaitmenu
+    if (this.value.length > 4) {
+        this.value = this.value.slice(0, 4);
+    }
+    
+    // tikrina ar metai ne ankstesni nei gimimo metai
+    const gimimoData = document.getElementById('gimimoData').value;
+    if (gimimoData && this.value.length === 4) {
+        const gimimoMetai = new Date(gimimoData).getFullYear();
+        if (parseInt(this.value) < gimimoMetai) {
+            this.value = gimimoMetai.toString();
+        }
     }
     
     userData.isilavinimas.metai = this.value;
@@ -297,7 +317,7 @@ document.getElementById('laipsnis').addEventListener('change', function() {
     atnaujintiProgresa();
 });
 
-// ribinis atvejis checkbox (16-17 metu santuoka)
+// SANTUOKOS ribinis atvejis checkbox (16-17 metu santuoka)
 document.getElementById('ribinisAtvejis').addEventListener('change', function() {
     const vedybinesPadetisSelect = document.getElementById('vedybinePadetis');
     
@@ -314,13 +334,19 @@ document.getElementById('ribinisAtvejis').addEventListener('change', function() 
 
 // kontaktai
 document.getElementById('telefonas').addEventListener('input', function() {
-    // leidziame tik skaitmenis, +, tarpus ir bruksnelius
+    // leidziami tik skaitmenis, +, tarpus ir bruksnelius
     this.value = this.value.replace(/[^0-9+\s\-]/g, '');
     
-    // automatiskai pridedame +370 jei pradeda rasyti 6
+    // automatiskai prideda +370 jei pradeda rasyti 6
     if (this.value.length === 1 && this.value === '6') {
         this.value = '+370' + this.value;
     }
+    
+    // apriboja iki 12 simboliu viso
+    if (this.value.length > 12) {
+        this.value = this.value.slice(0, 12);
+    }
+    
     userData.telefonas = this.value;
     atnaujintiProgresa();
 });
@@ -335,7 +361,7 @@ document.getElementById('adresas').addEventListener('input', function() {
     atnaujintiProgresa();
 });
 
-// vedybine padetis
+// santuoka
 document.getElementById('vedybinePadetis').addEventListener('change', function() {
     userData.vedybinePadetis = this.value;
     const sutuoktinioDetales = document.getElementById('sutuoktinioDetales');
@@ -353,15 +379,23 @@ document.getElementById('vedybinePadetis').addEventListener('change', function()
 });
 
 document.getElementById('sutuoktinioVardas').addEventListener('input', function() {
-    // leidziame tik raides
+    // leidziamos tik raides
     this.value = this.value.replace(/[0-9]/g, '');
+    // pirma raide didziosios
+    if (this.value.length > 0) {
+        this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
+    }
     userData.sutuoktinis.vardas = this.value;
     atnaujintiProgresa();
 });
 
 document.getElementById('sutuoktinioPavarde').addEventListener('input', function() {
-    // leidziame tik raides
+    // leidziamos tik raides
     this.value = this.value.replace(/[0-9]/g, '');
+    // pirma raide didziosios
+    if (this.value.length > 0) {
+        this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
+    }
     userData.sutuoktinis.pavarde = this.value;
     atnaujintiProgresa();
 });
@@ -445,6 +479,18 @@ document.getElementById('darboPatirtis').addEventListener('input', function() {
     // leidziame tik skaitmenis (metai)
     this.value = this.value.replace(/\D/g, '');
     userData.darboPatirtis = this.value;
+    
+    const darboSritisSelect = document.getElementById('darboSritis');
+    
+    // jei darbo patirtis 0, isjungia darbo sriti
+    if (this.value === '0') {
+        darboSritisSelect.disabled = true;
+        darboSritisSelect.value = '';
+        userData.darboSritis = '';
+    } else {
+        darboSritisSelect.disabled = false;
+    }
+    
     atnaujintiProgresa();
 });
 
@@ -453,18 +499,49 @@ document.getElementById('darboSritis').addEventListener('change', function() {
     atnaujintiProgresa();
 });
 
+// pridedama touched klase kai laukas palidziamas (paraudonuoja arba pazaliuoja)
+const visiInputai = document.querySelectorAll('input, select, textarea');
+visiInputai.forEach(input => {
+    input.addEventListener('blur', function() {
+        this.classList.add('touched');
+    });
+    
+    // pridedama touched klase kai pradeda rasyti
+    input.addEventListener('input', function() {
+        if (this.value.length > 0) {
+            this.classList.add('touched');
+        }
+    });
+});
+
 // formos pateikimas
 form.addEventListener('submit', function(e) {
     e.preventDefault();
     
-    // rodome rezultata
-    document.getElementById('rezultatas').style.display = 'block';
-    document.getElementById('rezultatoTekstas').textContent = JSON.stringify(userData, null, 2);
+    // pazymime visus laukus kaip touched kad pamatytu validacija
+    const visiLaukai = form.querySelectorAll('input, select, textarea');
+    visiLaukai.forEach(laukas => {
+        laukas.classList.add('touched');
+    });
     
-    // smooth scroll i rezultata
-    document.getElementById('rezultatas').scrollIntoView({ behavior: 'smooth' });
-    
-    console.log('Surinkti duomenys:', userData);
+    // tikrinama ar forma validi
+    if (form.checkValidity()) {
+        // rezultatas
+        document.getElementById('rezultatas').style.display = 'block';
+        document.getElementById('rezultatoTekstas').textContent = JSON.stringify(userData, null, 2);
+        
+        // smooth scroll i rezultata
+        document.getElementById('rezultatas').scrollIntoView({ behavior: 'smooth' });
+        
+        console.log('Surinkti duomenys:', userData);
+    } else {
+        // scroll i pirma neteisinga lauka
+        const pirmasNeteisinga = form.querySelector('.touched:invalid');
+        if (pirmasNeteisinga) {
+            pirmasNeteisinga.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            pirmasNeteisinga.focus();
+        }
+    }
 });
 
 // pradine busena

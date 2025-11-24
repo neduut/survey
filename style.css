@@ -294,15 +294,15 @@ textarea {
 }
 
 /* Validation Styles */
-input:invalid:not(:placeholder-shown),
-select:invalid:not(:placeholder-shown),
-textarea:invalid:not(:placeholder-shown) {
+input.touched:invalid,
+select.touched:invalid,
+textarea.touched:invalid {
     border-color: #ff6b6b;
 }
 
-input:valid:not(:placeholder-shown),
-select:valid,
-textarea:valid:not(:placeholder-shown) {
+input.touched:valid:not(:placeholder-shown),
+select.touched:valid,
+textarea.touched:valid:not(:placeholder-shown) {
     border-color: #51cf66;
 }
 
